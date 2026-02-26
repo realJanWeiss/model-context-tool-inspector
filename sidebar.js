@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GoogleGenAI } from './js-genai.js';
+const LM_STUDIO_BASE_URL = 'http://localhost:1234';
+const LM_STUDIO_MODELS_URL = `${LM_STUDIO_BASE_URL}/v1/models`;
+const LM_STUDIO_CHAT_COMPLETIONS_URL = `${LM_STUDIO_BASE_URL}/v1/chat/completions`;
 
 const statusDiv = document.getElementById('status');
 const tbody = document.getElementById('tableBody');
@@ -19,7 +21,6 @@ const userPromptText = document.getElementById('userPromptText');
 const promptBtn = document.getElementById('promptBtn');
 const traceBtn = document.getElementById('traceBtn');
 const resetBtn = document.getElementById('resetBtn');
-const apiKeyBtn = document.getElementById('apiKeyBtn');
 const promptResults = document.getElementById('promptResults');
 
 // Inject content script first.
@@ -137,50 +138,58 @@ copyAsJSON.onclick = async () => {
 
 // Interact with the page
 
-let genAI, chat;
+let selectedModel;
 
-const envModulePromise = import('./.env.json', { with: { type: 'json' } });
+initLMStudio();
 
-async function initGenAI() {
-  let env;
+async function initLMStudio() {
+  promptBtn.disabled = false;
+  resetBtn.disabled = false;
+
   try {
-    // Try load .env.json if present.
-    env = (await envModulePromise).default;
-  } catch {}
-  if (env?.apiKey) localStorage.apiKey ??= env.apiKey;
-  localStorage.model ??= env?.model || 'gemini-2.5-flash';
-  genAI = localStorage.apiKey ? new GoogleGenAI({ apiKey: localStorage.apiKey }) : undefined;
-  promptBtn.disabled = !localStorage.apiKey;
-  resetBtn.disabled = !localStorage.apiKey;
+    const models = await getAvailableModels();
+    if (models.length > 0) {
+      const storedModel = localStorage.model;
+      selectedModel = models.some((model) => model.id === storedModel)
+        ? storedModel
+        : models[0].id;
+      localStorage.model = selectedModel;
+    } else {
+      selectedModel = localStorage.model || 'local-model';
+      localStorage.model = selectedModel;
+    }
+  } catch {
+    selectedModel = localStorage.model || 'local-model';
+    localStorage.model = selectedModel;
+  }
 }
-initGenAI();
 
 async function suggestUserPrompt() {
-  if (currentTools.length == 0 || !genAI || userPromptText.value !== lastSuggestedUserPrompt)
+  if (currentTools.length == 0 || userPromptText.value !== lastSuggestedUserPrompt)
     return;
   const userPromptId = ++userPromptPendingId;
-  const response = await genAI.models.generateContent({
-    model: localStorage.model,
-    contents: [
-      '**Context:**',
-      `Today's date is: ${getFormattedDate()}`,
-      '**Tool Rules:**',
-      '1. **Bank Transaction Filter:** Use **PAST** dates only (e.g., "last month," "December 15th," "yesterday").',
-      '2. **Flight Search:** Use **FUTURE** dates only (e.g., "next week," "February 15th").',
-      '3. **Accommodation Search:** Use **FUTURE** dates only (e.g., "next weekend," "March 15th").',
-      '**Task:**',
-      'Generate one natural user query for a range of tools below, ideally chaining them together.',
-      'Ensure the date makes sense relative to today.',
-      'Output the query text only.',
-      '**Tools:**',
-      JSON.stringify(currentTools),
-    ],
-  });
+  const response = await createChatCompletion([
+    {
+      role: 'system',
+      content: [
+        `Today's date is: ${getFormattedDate()}`,
+        'Generate one natural user query for the available tools.',
+        'Keep it concise and output query text only.',
+      ].join('\n'),
+    },
+    {
+      role: 'user',
+      content: `Available tools:\n${JSON.stringify(currentTools)}`,
+    },
+  ]);
   if (userPromptId !== userPromptPendingId || userPromptText.value !== lastSuggestedUserPrompt)
     return;
-  lastSuggestedUserPrompt = response.text;
+  const suggestion = response?.choices?.[0]?.message?.content?.trim();
+  if (!suggestion) return;
+
+  lastSuggestedUserPrompt = suggestion;
   userPromptText.value = '';
-  for (const chunk of response.text) {
+  for (const chunk of suggestion) {
     await new Promise((r) => requestAnimationFrame(r));
     userPromptText.value += chunk;
   }
@@ -207,33 +216,55 @@ let trace = [];
 async function promptAI() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  chat ??= genAI.chats.create({ model: localStorage.model });
+  const message = userPromptText.value.trim();
+  if (!message) return;
 
-  const message = userPromptText.value;
   userPromptText.value = '';
   lastSuggestedUserPrompt = '';
   promptResults.textContent += `User prompt: "${message}"\n`;
-  const sendMessageParams = { message, config: getConfig() };
-  trace.push({ userPrompt: sendMessageParams });
-  let currentResult = await chat.sendMessage(sendMessageParams);
+  const messages = [
+    { role: 'system', content: getSystemInstruction() },
+    { role: 'user', content: message },
+  ];
+  trace.push({ userPrompt: { message, tools: getOpenAITools() } });
+
   let finalResponseGiven = false;
 
   while (!finalResponseGiven) {
-    const response = currentResult;
+    const response = await createChatCompletion(messages, getOpenAITools());
     trace.push({ response });
-    const functionCalls = response.functionCalls || [];
+    const assistantMessage = response?.choices?.[0]?.message;
+    if (!assistantMessage) {
+      logPrompt(`⚠️ AI response is missing a message: ${JSON.stringify(response)}`);
+      return;
+    }
+
+    const functionCalls = assistantMessage.tool_calls || [];
+
+    messages.push({
+      role: 'assistant',
+      content: assistantMessage.content || '',
+      tool_calls: functionCalls,
+    });
 
     if (functionCalls.length === 0) {
-      if (!response.text) {
-        logPrompt(`⚠️ AI response has no text: ${JSON.stringify(response.candidates)}\n`);
+      if (!assistantMessage.content) {
+        logPrompt(`⚠️ AI response has no text: ${JSON.stringify(response)}\n`);
       } else {
-        logPrompt(`AI result: ${response.text?.trim()}\n`);
+        logPrompt(`AI result: ${assistantMessage.content.trim()}\n`);
       }
       finalResponseGiven = true;
     } else {
-      const toolResponses = [];
-      for (const { name, args } of functionCalls) {
-        const inputArgs = JSON.stringify(args);
+      for (const functionCall of functionCalls) {
+        const name = functionCall?.function?.name;
+        const rawArgs = functionCall?.function?.arguments || '{}';
+
+        if (!name) {
+          logPrompt(`⚠️ Malformed tool call from AI: ${JSON.stringify(functionCall)}`);
+          continue;
+        }
+
+        const inputArgs = normalizeInputArgs(rawArgs);
         logPrompt(`AI calling tool "${name}" with ${inputArgs}`);
         try {
           const result = await chrome.tabs.sendMessage(tab.id, {
@@ -241,40 +272,30 @@ async function promptAI() {
             name,
             inputArgs,
           });
-          toolResponses.push({ functionResponse: { name, response: { result } } });
           logPrompt(`Tool "${name}" result: ${result}`);
+          messages.push({
+            role: 'tool',
+            tool_call_id: functionCall.id,
+            content: stringifyToolContent({ result }),
+          });
         } catch (e) {
           logPrompt(`⚠️ Error executing tool "${name}": ${e.message}`);
-          toolResponses.push({
-            functionResponse: { name, response: { error: e.message } },
+          messages.push({
+            role: 'tool',
+            tool_call_id: functionCall.id,
+            content: stringifyToolContent({ error: e.message }),
           });
         }
       }
-
-      // FIXME: New WebMCP tools may not be discovered if there's a navigation.
-      // An articial timeout could be introduced for mitigation but it's not robust.
-
-      const sendMessageParams = { message: toolResponses, config: getConfig() };
-      trace.push({ userPrompt: sendMessageParams });
-      currentResult = await chat.sendMessage(sendMessageParams);
     }
   }
 }
 
 resetBtn.onclick = () => {
-  chat = undefined;
   trace = [];
   userPromptText.value = '';
   lastSuggestedUserPrompt = '';
   promptResults.textContent = '';
-  suggestUserPrompt();
-};
-
-apiKeyBtn.onclick = async () => {
-  const apiKey = prompt('Enter Gemini API key');
-  if (apiKey == null) return;
-  localStorage.apiKey = apiKey;
-  await initGenAI();
   suggestUserPrompt();
 };
 
@@ -326,25 +347,85 @@ function getFormattedDate() {
   });
 }
 
-function getConfig() {
-  const systemInstruction = [
+function getSystemInstruction() {
+  return [
     'You are an assistant embedded in a browser tab.',
     'User prompts typically refer to the current tab unless stated otherwise.',
     'Use your tools to query page content when you need it.',
     `Today's date is: ${getFormattedDate()}`,
     'CRITICAL RULE: Whenever the user provides a relative date (e.g., "next Monday", "tomorrow", "in 3 days"),  you must calculate the exact calendar date based on today\'s date.',
-  ];
+  ].join('\n');
+}
 
-  const functionDeclarations = currentTools.map((tool) => {
+function getOpenAITools() {
+  return currentTools.map((tool) => {
     return {
-      name: tool.name,
-      description: tool.description,
-      parametersJsonSchema: tool.inputSchema
-        ? JSON.parse(tool.inputSchema)
-        : { type: 'object', properties: {} },
+      type: 'function',
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.inputSchema
+          ? JSON.parse(tool.inputSchema)
+          : { type: 'object', properties: {} },
+      },
     };
   });
-  return { systemInstruction, tools: [{ functionDeclarations }] };
+}
+
+async function getAvailableModels() {
+  const response = await fetch(LM_STUDIO_MODELS_URL);
+  if (!response.ok) {
+    throw new Error(`Failed to list LM Studio models: ${response.status} ${response.statusText}`);
+  }
+  const json = await response.json();
+  return json.data || [];
+}
+
+async function createChatCompletion(messages, tools = []) {
+  const payload = {
+    model: selectedModel || localStorage.model || 'local-model',
+    messages,
+    temperature: 0.2,
+  };
+
+  if (tools.length > 0) {
+    payload.tools = tools;
+    payload.tool_choice = 'auto';
+  }
+
+  const response = await fetch(LM_STUDIO_CHAT_COMPLETIONS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`LM Studio request failed (${response.status}): ${errorText || response.statusText}`);
+  }
+
+  return response.json();
+}
+
+function normalizeInputArgs(rawArgs) {
+  if (!rawArgs) return '{}';
+  if (typeof rawArgs === 'string') {
+    try {
+      return JSON.stringify(JSON.parse(rawArgs));
+    } catch {
+      return '{}';
+    }
+  }
+  return JSON.stringify(rawArgs);
+}
+
+function stringifyToolContent(content) {
+  if (typeof content === 'string') return content;
+  try {
+    return JSON.stringify(content);
+  } catch {
+    return String(content);
+  }
 }
 
 function generateTemplateFromSchema(schema) {

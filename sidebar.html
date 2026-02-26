@@ -5,15 +5,17 @@
 -->
 
 <html>
-  <head>
-    <title>Tool Inspector</title>
-    <meta charset="utf-8">
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="container">
-      <h2 class="collapsible-header">WebMCP Tools</h2>
-      <div class="section-content">
+
+<head>
+  <title>Tool Inspector</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="container">
+    <h2 class="collapsible-header">WebMCP Tools</h2>
+    <div class="section-content">
 
       <div id="status"></div>
 
@@ -29,10 +31,10 @@
           <span id="copyAsJSON">📝 Copy as JSON</span>
         </div>
       </div>
-      </div>
+    </div>
 
-      <h2 class="collapsible-header">Interact with the Page</h2>
-      <div class="section-content">
+    <h2 class="collapsible-header">Interact with the Page</h2>
+    <div class="section-content">
 
       <div class="form-group">
         <label for="userPromptText">User Prompt</label>
@@ -42,7 +44,6 @@
       <div class="form-group">
         <button id="promptBtn" disabled>Send</button>
         <button id="resetBtn" class="secondary" disabled>Reset</button>
-        <button id="apiKeyBtn" class="secondary">Set Gemini API key</button>
         <button id="traceBtn" class="secondary">Copy trace</button>
       </div>
 
@@ -63,8 +64,9 @@
       </div>
 
       <pre id="toolResults"></pre>
-      </div>
     </div>
-    <script type="module" src="sidebar.js"></script>
-  </body>
+  </div>
+  <script type="module" src="sidebar.js"></script>
+</body>
+
 </html>
