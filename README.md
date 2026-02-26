@@ -6,6 +6,8 @@ A Chrome Extension that allows developers to inspect, monitor, and execute tools
 
 **Important:** This extension relies on the experimental `navigator.modelContextTesting` Web API. You must enable the "WebMCP for testing" flag in `chrome://flags` to turn it on in Chrome 146.0.7672.0 or higher.
 
+This extension now sends prompts to LM Studio using the OpenAI-compatible API at `http://localhost:1234/v1/chat/completions`. Make sure LM Studio is running locally and at least one model is loaded.
+
 ## Installation
 
 You can install this extension either directly from the Chrome Web Store or manually from the source code.
