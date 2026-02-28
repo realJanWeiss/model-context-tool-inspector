@@ -11,17 +11,18 @@ import path from 'node:path';
 const watch = process.argv.includes('--watch');
 
 const ENTRY_POINTS = [
-  'src/background.ts',
-  'src/content.ts',
-  'src/devtools.ts',
-  'src/panel.tsx',
-  'src/chat.tsx',
+  { in: 'src/background.ts',    out: 'background' },
+  { in: 'src/content.ts',       out: 'content' },
+  { in: 'src/devtools.ts',      out: 'devtools' },
+  { in: 'src/panel/index.tsx',  out: 'panel' },
+  { in: 'src/chat/index.tsx',   out: 'chat' },
 ];
 
 const STATIC_FILES = [
   'src/devtools.html',
   'src/panel.html',
   'src/sidebar.html',
+  'src/base.css',
   'src/styles.css',
   'src/chat.css',
   'manifest.json',
