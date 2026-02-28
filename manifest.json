@@ -3,22 +3,22 @@
   "name": "Model Context Tool Inspector Custom",
   "description": "Inspect, monitor, and execute WebMCP tools manually or with LM Studio",
   "version": "1.7",
-  "permissions": ["sidePanel", "activeTab", "scripting"],
+  "permissions": ["sidePanel", "activeTab", "scripting", "tabs"],
   "host_permissions": ["<all_urls>"],
   "update_url": "https://clients2.google.com/service/update2/crx",
   "action": {},
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "dist/background.js"
   },
-  "devtools_page": "devtools.html",
+  "devtools_page": "dist/devtools.html",
   "side_panel": {
-    "default_path": "sidebar.html"
+    "default_path": "dist/sidebar.html"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "runAt": "document_start",
-      "js": ["content.js"]
+      "js": ["dist/content.js"]
     }
   ]
 }

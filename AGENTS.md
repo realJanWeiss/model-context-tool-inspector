@@ -6,42 +6,69 @@ This file describes the project structure, conventions, and guidelines for agent
 
 ## Project Overview
 
-This is a **Chrome Extension (Manifest V3)** that acts as a side-panel inspector for the [Model Context Protocol](https://modelcontextprotocol.io/) / WebMCP tool API. It lists available tools exposed by a page, lets the user invoke them, and integrates with a local LM Studio instance to drive an AI agent loop.
+This is a **Chrome Extension (Manifest V3)** that acts as both a side-panel chat interface and a DevTools panel inspector for the [Model Context Protocol](https://modelcontextprotocol.io/) / WebMCP tool API. It lists available tools exposed by a page, lets the user invoke them via a chat UI or manually, and integrates with a local LM Studio instance to drive an AI agent loop.
 
-The extension is **loaded directly as unpacked source** into Chrome — there is no compile/transpile step. All source files are plain ES2022+ JavaScript.
+The extension is built from **TypeScript source** in `src/` and bundled into `dist/` via esbuild. Chrome loads the extension from `dist/` (the manifest lives at the root but all runtime files are in `dist/`).
 
 ---
 
 ## File Structure
 
 ```
-manifest.json       # Chrome Extension Manifest v3
-background.js       # Service worker (MV3 background script)
-content.js          # Content script injected into all pages
-sidebar.html        # Extension side panel UI (HTML entry point)
-sidebar.js          # Main application logic (~560 lines)
-styles.css          # All CSS for the sidebar UI
-package.json        # devDependencies only (esbuild; no scripts defined)
-```
+manifest.json         # Chrome Extension Manifest v3 — points all paths to dist/
+build.mjs             # esbuild build script (run with: npm run build)
+tsconfig.json         # TypeScript config (strict, noEmit — type-check only)
+package.json          # devDependencies + npm scripts
 
-All source lives at the **root level** — there is no `src/`, `dist/`, `lib/`, or `test/` directory.
+src/
+  types.ts            # Shared TypeScript interfaces (McpTool, ChatMessage, etc.)
+  lmstudio.ts         # Shared LM Studio client + agent-loop utilities
+  background.ts       # Service worker (MV3 background script)
+  content.ts          # Content script injected into all pages
+  devtools.ts         # DevTools entry point — registers the "WebMCP Tools" panel
+  panel.ts            # DevTools panel logic (tool table, manual execution, AI loop)
+  panel.html          # DevTools panel HTML
+  chat.ts             # Side-panel chat UI logic
+  sidebar.html        # Side-panel HTML (chat interface)
+  styles.css          # CSS for the DevTools panel
+  chat.css            # CSS for the chat sidebar
+
+dist/                 # Build output (generated — do not edit by hand)
+  *.js, *.js.map      # Bundled scripts
+  *.html, *.css       # Copied static assets
+  manifest.json       # Copied manifest
+```
 
 ---
 
 ## Build, Lint, and Test Commands
 
-### Loading the extension
-There is no build step. Load the extension in Chrome:
-1. Open `chrome://extensions`
-2. Enable **Developer mode**
-3. Click **Load unpacked** and select this directory
-
-### Build
-`esbuild` is present as a devDependency (used historically to bundle external deps), but there is no active build script. If a bundling step becomes necessary:
+### Install dependencies
 ```bash
 npm install
-npx esbuild <entrypoint> --bundle --outfile=<output>
 ```
+
+### Build (required before loading the extension)
+```bash
+npm run build
+```
+Outputs all files to `dist/`. Also copies HTML, CSS, and `manifest.json` into `dist/`.
+
+### Watch mode (rebuilds on file changes)
+```bash
+npm run watch
+```
+
+### Type-check (no emit)
+```bash
+npm run typecheck
+```
+
+### Loading the extension in Chrome
+1. Run `npm run build` first.
+2. Open `chrome://extensions`
+3. Enable **Developer mode**
+4. Click **Load unpacked** and select the **root** of this repository (where `manifest.json` lives).
 
 ### Lint / Format
 No ESLint or Prettier config exists. There are currently **no lint or format commands**.
@@ -53,17 +80,19 @@ There are **no tests and no test runner**. There is no `jest.config.*`, `vitest.
 
 ## Chrome Extension Specifics
 
-- **Manifest V3**: background is a service worker (`background.js`), not a persistent page.
-- **Side Panel API**: the UI is rendered in `sidebar.html` using `chrome.sidePanel`.
-- **Content script** (`content.js`) bridges the page's `navigator.modelContextTesting` API to the extension via `chrome.runtime.sendMessage` / `chrome.tabs.sendMessage`.
-- **No `eval`, no remote code**: MV3 CSP prohibits these.
+- **Manifest V3**: background is a service worker (`dist/background.js`), not a persistent page.
+- **Side Panel API**: chat UI is rendered in `dist/sidebar.html` using `chrome.sidePanel`.
+- **DevTools Panel**: full inspector rendered in `dist/panel.html` via `chrome.devtools.panels.create`.
+- **Content script** (`dist/content.js`) bridges the page's `navigator.modelContextTesting` API to the extension via `chrome.runtime.sendMessage` / `chrome.tabs.sendMessage`.
+- **No `eval`, no remote code**: MV3 CSP prohibits these. esbuild bundles to IIFE format with no dynamic imports.
 - **Permissions**: declared in `manifest.json`; do not add permissions without updating the manifest.
 
 ---
 
 ## Key Constraints
 
-- Do not introduce TypeScript, a bundler, or a UI framework without updating this file and the README.
-- Do not add runtime `npm` dependencies without a clear bundling strategy (the extension loads files directly from disk).
-- Keep the flat file structure unless a major refactor is explicitly planned.
-- All changes must be loadable as an unpacked extension without any build step, unless a build pipeline is explicitly added.
+- All source is TypeScript in `src/`. Do not add plain `.js` source files to `src/`.
+- Do not edit files in `dist/` — they are generated by `npm run build`.
+- Do not add runtime `npm` dependencies without bundling them via esbuild (the extension loads from disk, not a CDN).
+- After any change to `src/`, run `npm run build` and `npm run typecheck` before considering the task done.
+- Do not introduce a UI framework without updating this file and the README.
