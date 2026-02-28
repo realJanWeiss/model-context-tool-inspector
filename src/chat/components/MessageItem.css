@@ -1,0 +1,29 @@
+/* ── Message bubbles ──────────────────────────────────────────────────────── */
+
+.msg {
+  max-width: 100%;
+  line-height: 1.5;
+}
+
+.msg.user {
+  align-self: flex-end;
+  background: var(--brand);
+  color: #fff;
+  padding: 8px 13px;
+  border-radius: 18px 18px 4px 18px;
+  max-width: 80%;
+  word-break: break-word;
+}
+
+.msg.ai {
+  align-self: flex-start;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (prefers-color-scheme: dark) {
+  .msg.ai {
+    color: #d4d4d4;
+  }
+}

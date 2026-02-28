@@ -1,0 +1,14 @@
+/* ── Chat footer (chips + input) ──────────────────────────────────────────── */
+
+#bottom {
+  padding: 8px 12px 12px;
+  border-top: 1px solid var(--border);
+  background: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  #bottom {
+    background: #121212;
+    border-top-color: var(--border);
+  }
+}

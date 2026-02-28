@@ -4,6 +4,8 @@
 
 import { Accessor, For } from 'solid-js';
 import type { McpTool } from '../../types.js';
+import { FormField } from './FormField.js';
+import { ResultPane } from './ResultPane.js';
 
 export function ExecuteSection(props: {
   tools: Accessor<McpTool[]>;
@@ -19,8 +21,7 @@ export function ExecuteSection(props: {
 
   return (
     <>
-      <div class="form-group">
-        <label for="toolNames">Tool</label>
+      <FormField label="Tool" for="toolNames">
         <select
           id="toolNames"
           disabled={noTools()}
@@ -31,17 +32,16 @@ export function ExecuteSection(props: {
             {(tool) => <option value={tool.name}>"{tool.name}"</option>}
           </For>
         </select>
-      </div>
+      </FormField>
 
-      <div class="form-group">
-        <label for="inputArgsText">Input Arguments</label>
+      <FormField label="Input Arguments" for="inputArgsText">
         <textarea
           id="inputArgsText"
           disabled={noTools()}
           value={props.inputArgs()}
           onInput={(e) => props.onInputArgsChange(e.currentTarget.value)}
         />
-      </div>
+      </FormField>
 
       <div class="form-group">
         <button
@@ -53,7 +53,7 @@ export function ExecuteSection(props: {
         </button>
       </div>
 
-      <pre id="toolResults">{props.toolResult()}</pre>
+      <ResultPane id="toolResults" content={props.toolResult} />
     </>
   );
 }

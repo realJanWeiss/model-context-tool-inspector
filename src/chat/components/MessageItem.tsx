@@ -4,6 +4,7 @@
 
 import type { Msg, ToolCallMsg } from '../types.js';
 import { ToolCallItem } from './ToolCallItem.js';
+import './MessageItem.css';
 
 export function MessageItem(props: { msg: Msg }) {
   if (props.msg.role === 'user') {

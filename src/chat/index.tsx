@@ -8,6 +8,8 @@
 import { render } from 'solid-js/web';
 import { initLMStudio } from '../lmstudio.js';
 import { App } from './App.js';
+import '../base.css';
+import '../chat.css';
 
 void initLMStudio();
 

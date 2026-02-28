@@ -3,6 +3,7 @@
  */
 
 import { For, Show } from 'solid-js';
+import './DataView.css';
 
 export function DataView(props: { data: unknown }) {
   const d = props.data;

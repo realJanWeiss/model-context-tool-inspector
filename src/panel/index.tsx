@@ -7,6 +7,8 @@
 
 import { render } from 'solid-js/web';
 import { App } from './App.js';
+import '../base.css';
+import '../styles.css';
 
 // In a DevTools panel the inspected tab ID is always available synchronously.
 const tabId = chrome.devtools.inspectedWindow.tabId;

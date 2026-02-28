@@ -1,0 +1,22 @@
+/* ── Result output pane ───────────────────────────────────────────────────── */
+
+.result-pane {
+  background: #222;
+  color: #fff;
+  line-height: 2;
+  padding: 0 4px;
+  border-radius: 4px;
+  white-space: pre-line;
+  max-height: 200px;
+  overflow-y: scroll;
+  margin-bottom: 20px;
+  white-space: break-spaces;
+  word-break: break-all;
+}
+
+@media (prefers-color-scheme: dark) {
+  .result-pane {
+    background: #000;
+    border: 1px solid #333;
+  }
+}

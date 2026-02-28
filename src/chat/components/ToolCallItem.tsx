@@ -4,7 +4,8 @@
 
 import { createSignal, Show } from 'solid-js';
 import type { ToolCallMsg } from '../types.js';
-import { DataView } from './DataView.js';
+import { DetailSection } from './DetailSection.js';
+import './ToolCallItem.css';
 
 function tryParseJson(s: string): unknown {
   try {
@@ -12,17 +13,6 @@ function tryParseJson(s: string): unknown {
   } catch {
     return s;
   }
-}
-
-function DetailSection(props: { label: string; data: unknown }) {
-  return (
-    <div class="tool-detail-section">
-      <div class="tool-detail-label">{props.label}</div>
-      <div class="tool-detail-body">
-        <DataView data={props.data} />
-      </div>
-    </div>
-  );
 }
 
 export function ToolCallItem(props: { msg: ToolCallMsg }) {

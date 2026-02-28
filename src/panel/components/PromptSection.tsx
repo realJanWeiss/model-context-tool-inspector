@@ -3,6 +3,8 @@
  */
 
 import { Accessor } from 'solid-js';
+import { FormField } from './FormField.js';
+import { ResultPane } from './ResultPane.js';
 
 export function PromptSection(props: {
   userPrompt: Accessor<string>;
@@ -15,8 +17,7 @@ export function PromptSection(props: {
 }) {
   return (
     <>
-      <div class="form-group">
-        <label for="userPromptText">User Prompt</label>
+      <FormField label="User Prompt" for="userPromptText">
         <textarea
           id="userPromptText"
           value={props.userPrompt()}
@@ -28,7 +29,7 @@ export function PromptSection(props: {
             }
           }}
         />
-      </div>
+      </FormField>
 
       <div class="form-group">
         <button disabled={!props.lmReady()} onClick={props.onSubmit}>Send</button>
@@ -36,7 +37,7 @@ export function PromptSection(props: {
         <button class="secondary" onClick={props.onCopyTrace}>Copy trace</button>
       </div>
 
-      <pre id="promptResults">{props.promptLog()}</pre>
+      <ResultPane id="promptResults" content={props.promptLog} />
     </>
   );
 }

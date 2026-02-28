@@ -22,9 +22,6 @@ const STATIC_FILES = [
   'src/devtools.html',
   'src/panel.html',
   'src/sidebar.html',
-  'src/base.css',
-  'src/styles.css',
-  'src/chat.css',
   'manifest.json',
 ];
 

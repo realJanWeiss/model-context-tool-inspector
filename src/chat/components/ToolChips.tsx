@@ -4,6 +4,7 @@
 
 import { Accessor, For } from 'solid-js';
 import type { McpTool } from '../../types.js';
+import './ToolChips.css';
 
 export function ToolChips(props: { tools: Accessor<McpTool[]>; onChipClick: (tool: McpTool) => void }) {
   return (

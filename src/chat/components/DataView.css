@@ -1,0 +1,37 @@
+/* ── Key/value data renderer ──────────────────────────────────────────────── */
+
+.tool-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tool-detail-row {
+  display: grid;
+  grid-template-columns: minmax(60px, auto) 1fr;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.tool-detail-key {
+  color: var(--text-placeholder);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tool-detail-val {
+  color: #374151;
+  word-break: break-word;
+}
+
+.tool-detail-empty {
+  color: var(--text-placeholder);
+  font-style: italic;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tool-detail-val {
+    color: #d4d4d4;
+  }
+}

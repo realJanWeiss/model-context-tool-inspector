@@ -12,9 +12,8 @@ import {
 } from '../lmstudio.js';
 import type { ChatMessage, McpTool, ToolsPayload } from '../types.js';
 import type { Msg } from './types.js';
-import { ChatInput } from './components/ChatInput.js';
+import { ChatFooter } from './components/ChatFooter.js';
 import { MessageList } from './components/MessageList.js';
-import { ToolChips } from './components/ToolChips.js';
 
 export function App() {
   const [tools, setTools] = createSignal<McpTool[]>([]);
@@ -134,15 +133,14 @@ export function App() {
   return (
     <div id="chat-root">
       <MessageList messages={messages} loading={loading} />
-      <div id="bottom">
-        <ToolChips tools={tools} onChipClick={onChipClick} />
-        <ChatInput
-          value={inputValue}
-          disabled={loading}
-          onInput={setInputValue}
-          onSubmit={() => void submit()}
-        />
-      </div>
+      <ChatFooter
+        tools={tools}
+        inputValue={inputValue}
+        disabled={loading}
+        onInput={setInputValue}
+        onSubmit={() => void submit()}
+        onChipClick={onChipClick}
+      />
     </div>
   );
 }
