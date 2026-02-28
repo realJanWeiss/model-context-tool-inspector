@@ -122,10 +122,134 @@ function addAIMessage(text) {
 function addToolCall(name) {
   const el = document.createElement('div');
   el.className = 'msg tool-call';
-  el.textContent = `› ${name}`;
+
+  const header = document.createElement('div');
+  header.className = 'tool-call-header';
+  header.innerHTML = `<span class="tool-call-chevron">›</span><span class="tool-call-name">${name}</span>`;
+  el.appendChild(header);
+
+  const details = document.createElement('div');
+  details.className = 'tool-call-details';
+  el.appendChild(details);
+
+  header.addEventListener('click', () => {
+    if (details.dataset.ready === 'true') {
+      el.classList.toggle('expanded');
+    }
+  });
+
   messagesEl.appendChild(el);
   scrollToBottom();
   return el;
+}
+
+function setToolCallResult(el, args, result) {
+  const details = el.querySelector('.tool-call-details');
+
+  let argsObj;
+  try { argsObj = JSON.parse(args); } catch { argsObj = args; }
+
+  let resultObj;
+  try { resultObj = JSON.parse(result); } catch { resultObj = result; }
+
+  const inputSection = buildDetailSection('Input', argsObj);
+  const outputSection = buildDetailSection('Output', resultObj);
+  details.appendChild(inputSection);
+  details.appendChild(outputSection);
+
+  details.dataset.ready = 'true';
+  el.querySelector('.tool-call-header').classList.add('clickable');
+}
+
+function buildDetailSection(label, data) {
+  const section = document.createElement('div');
+  section.className = 'tool-detail-section';
+
+  const heading = document.createElement('div');
+  heading.className = 'tool-detail-label';
+  heading.textContent = label;
+  section.appendChild(heading);
+
+  const body = document.createElement('div');
+  body.className = 'tool-detail-body';
+
+  if (data === null || data === undefined) {
+    body.textContent = 'null';
+  } else if (typeof data === 'object') {
+    body.appendChild(renderObject(data));
+  } else {
+    const pre = document.createElement('pre');
+    pre.textContent = String(data);
+    body.appendChild(pre);
+  }
+
+  section.appendChild(body);
+  return section;
+}
+
+function renderObject(data) {
+  if (Array.isArray(data)) {
+    if (data.length === 0) {
+      const em = document.createElement('span');
+      em.className = 'tool-detail-empty';
+      em.textContent = '(empty)';
+      return em;
+    }
+    const list = document.createElement('div');
+    list.className = 'tool-detail-list';
+    data.forEach((item, i) => {
+      const row = document.createElement('div');
+      row.className = 'tool-detail-row';
+      const key = document.createElement('span');
+      key.className = 'tool-detail-key';
+      key.textContent = `${i}`;
+      const val = document.createElement('span');
+      val.className = 'tool-detail-val';
+      if (typeof item === 'object' && item !== null) {
+        val.appendChild(renderObject(item));
+      } else {
+        val.textContent = JSON.stringify(item);
+      }
+      row.appendChild(key);
+      row.appendChild(val);
+      list.appendChild(row);
+    });
+    return list;
+  }
+
+  if (typeof data === 'object' && data !== null) {
+    const entries = Object.entries(data);
+    if (entries.length === 0) {
+      const em = document.createElement('span');
+      em.className = 'tool-detail-empty';
+      em.textContent = '(empty)';
+      return em;
+    }
+    const list = document.createElement('div');
+    list.className = 'tool-detail-list';
+    entries.forEach(([k, v]) => {
+      const row = document.createElement('div');
+      row.className = 'tool-detail-row';
+      const key = document.createElement('span');
+      key.className = 'tool-detail-key';
+      key.textContent = k;
+      const val = document.createElement('span');
+      val.className = 'tool-detail-val';
+      if (typeof v === 'object' && v !== null) {
+        val.appendChild(renderObject(v));
+      } else {
+        val.textContent = JSON.stringify(v);
+      }
+      row.appendChild(key);
+      row.appendChild(val);
+      list.appendChild(row);
+    });
+    return list;
+  }
+
+  const span = document.createElement('span');
+  span.textContent = JSON.stringify(data);
+  return span;
 }
 
 function scrollToBottom() {
@@ -262,7 +386,7 @@ async function runAgentLoop(userMessage) {
       if (!name) continue;
 
       const inputArgs = normalizeInputArgs(rawArgs);
-      addToolCall(name);
+      const toolCallEl = addToolCall(name);
 
       try {
         const result = await chrome.tabs.sendMessage(tab.id, {
@@ -270,12 +394,14 @@ async function runAgentLoop(userMessage) {
           name,
           inputArgs,
         });
+        setToolCallResult(toolCallEl, inputArgs, result ?? '(no result)');
         messages.push({
           role: 'tool',
           tool_call_id: call.id,
           content: stringifyContent({ result }),
         });
       } catch (e) {
+        setToolCallResult(toolCallEl, inputArgs, `Error: ${e.message}`);
         messages.push({
           role: 'tool',
           tool_call_id: call.id,
