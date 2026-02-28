@@ -4,6 +4,7 @@
  */
 
 import esbuild from 'esbuild';
+import { solidPlugin } from 'esbuild-plugin-solid';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -13,8 +14,8 @@ const ENTRY_POINTS = [
   'src/background.ts',
   'src/content.ts',
   'src/devtools.ts',
-  'src/panel.ts',
-  'src/chat.ts',
+  'src/panel.tsx',
+  'src/chat.tsx',
 ];
 
 const STATIC_FILES = [
@@ -45,12 +46,14 @@ const buildOptions = {
   platform: 'browser',
   target: 'es2022',
   sourcemap: true,
+  plugins: [solidPlugin()],
 };
 
 if (watch) {
   const ctx = await esbuild.context({
     ...buildOptions,
     plugins: [
+      solidPlugin(),
       {
         name: 'copy-statics',
         setup(build) {

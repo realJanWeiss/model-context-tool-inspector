@@ -13,59 +13,7 @@
 </head>
 
 <body>
-  <div class="container">
-    <h2 class="collapsible-header">WebMCP Tools</h2>
-    <div class="section-content">
-
-      <div id="status"></div>
-
-      <div class="table-container">
-        <table id="resultsTable">
-          <thead>
-            <tr id="tableHeaderRow"></tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-        <div id="copyToClipboard">
-          <span id="copyAsScriptToolConfig">📝 Copy as ScriptToolConfig</span>
-          <span id="copyAsJSON">📝 Copy as JSON</span>
-        </div>
-      </div>
-    </div>
-
-    <h2 class="collapsible-header">Interact with the Page</h2>
-    <div class="section-content">
-
-      <div class="form-group">
-        <label for="userPromptText">User Prompt</label>
-        <textarea id="userPromptText"></textarea>
-      </div>
-
-      <div class="form-group">
-        <button id="promptBtn" disabled>Send</button>
-        <button id="resetBtn" class="secondary" disabled>Reset</button>
-        <button id="traceBtn" class="secondary">Copy trace</button>
-      </div>
-
-      <pre id="promptResults"></pre>
-
-      <div class="form-group">
-        <label for="toolNames">Tool</label>
-        <select id="toolNames"></select>
-      </div>
-
-      <div class="form-group">
-        <label for="inputArgsText">Input Arguments</label>
-        <textarea id="inputArgsText">{"text": "hello world"}</textarea>
-      </div>
-
-      <div class="form-group">
-        <button id="executeBtn">Execute Tool</button>
-      </div>
-
-      <pre id="toolResults"></pre>
-    </div>
-  </div>
+  <div id="app"></div>
   <script src="panel.js"></script>
 </body>
 
