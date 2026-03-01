@@ -3,9 +3,9 @@
  */
 
 import { For, Show } from 'solid-js';
-import './DataView.css';
+import './ToolDetailBodyEntry.css';
 
-export function DataView(props: { data: unknown }) {
+export function ToolDetailBodyEntry(props: { data: unknown }) {
   const d = props.data;
 
   if (d === null || d === undefined) {
@@ -32,7 +32,7 @@ export function DataView(props: { data: unknown }) {
                   when={typeof v === 'object' && v !== null}
                   fallback={<>{JSON.stringify(v)}</>}
                 >
-                  <DataView data={v} />
+                  <ToolDetailBodyEntry data={v} />
                 </Show>
               </span>
             </div>
