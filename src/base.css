@@ -27,7 +27,7 @@ body {
 /* ── Body baseline ────────────────────────────────────────────────────────── */
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 14px;
   background: #fff;
   color: #111;
@@ -100,7 +100,7 @@ button:disabled {
 }
 
 .collapsible-header::after {
-  content: '▾';
+  content: "▾";
   transition: transform 0.2s ease;
   margin-left: 6px;
 }

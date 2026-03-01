@@ -3,19 +3,19 @@
  * static assets (HTML, CSS) into dist/.
  */
 
-import esbuild from 'esbuild';
-import { solidPlugin } from 'esbuild-plugin-solid';
 import fs from 'node:fs';
 import path from 'node:path';
+import esbuild from 'esbuild';
+import { solidPlugin } from 'esbuild-plugin-solid';
 
 const watch = process.argv.includes('--watch');
 
 const ENTRY_POINTS = [
-  { in: 'src/background.ts',    out: 'background' },
-  { in: 'src/content.ts',       out: 'content' },
-  { in: 'src/devtools.ts',      out: 'devtools' },
-  { in: 'src/panel/index.tsx',  out: 'panel' },
-  { in: 'src/chat/index.tsx',   out: 'chat' },
+  { in: 'src/background.ts', out: 'background' },
+  { in: 'src/content.ts', out: 'content' },
+  { in: 'src/devtools.ts', out: 'devtools' },
+  { in: 'src/panel/index.tsx', out: 'panel' },
+  { in: 'src/chat/index.tsx', out: 'chat' },
 ];
 
 const STATIC_FILES = [

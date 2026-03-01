@@ -34,7 +34,10 @@ export function ToolCallItem(props: { msg: ToolCallMsg }) {
       <Show when={expanded() && ready()}>
         <div class="tool-call-details" style="display:block">
           <DetailSection label="Input" data={tryParseJson(props.msg.args)} />
-          <DetailSection label="Output" data={tryParseJson(props.msg.result ?? '')} />
+          <DetailSection
+            label="Output"
+            data={tryParseJson(props.msg.result ?? '')}
+          />
         </div>
       </Show>
     </div>

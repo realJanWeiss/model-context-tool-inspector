@@ -5,7 +5,12 @@
  * Shared LM Studio client and agent-loop utilities.
  */
 
-import type { ChatCompletionResponse, ChatMessage, McpTool, OpenAITool } from './types.js';
+import type {
+  ChatCompletionResponse,
+  ChatMessage,
+  McpTool,
+  OpenAITool,
+} from './types';
 
 const LM_STUDIO_BASE_URL = 'http://localhost:1234';
 const LM_STUDIO_MODELS_URL = `${LM_STUDIO_BASE_URL}/v1/models`;
@@ -22,7 +27,7 @@ export async function initLMStudio(): Promise<void> {
         ? models.some((m) => m.id === storedModel)
           ? storedModel
           : models[0]?.id
-        : storedModel ?? 'local-model';
+        : (storedModel ?? 'local-model');
   } catch {
     selectedModel = localStorage.getItem('model') ?? 'local-model';
   }
@@ -77,7 +82,7 @@ export function getSystemInstruction(): string {
     'User prompts typically refer to the current tab unless stated otherwise.',
     'Use your tools to query page content when you need it.',
     `Today's date is: ${getFormattedDate()}`,
-    "CRITICAL RULE: Whenever the user provides a relative date (e.g., \"next Monday\", \"tomorrow\", \"in 3 days\"), you must calculate the exact calendar date based on today's date.",
+    'CRITICAL RULE: Whenever the user provides a relative date (e.g., "next Monday", "tomorrow", "in 3 days"), you must calculate the exact calendar date based on today\'s date.',
   ].join('\n');
 }
 
@@ -119,13 +124,13 @@ export function generateTemplateFromSchema(schema: unknown): unknown {
   if (!schema || typeof schema !== 'object') return null;
   const s = schema as Record<string, unknown>;
 
-  if (Object.prototype.hasOwnProperty.call(s, 'const')) return s['const'];
+  if (Object.hasOwn(s, 'const')) return s['const'];
 
   if (Array.isArray(s['oneOf']) && s['oneOf'].length > 0) {
     return generateTemplateFromSchema(s['oneOf'][0]);
   }
 
-  if (Object.prototype.hasOwnProperty.call(s, 'default')) return s['default'];
+  if (Object.hasOwn(s, 'default')) return s['default'];
 
   if (Array.isArray(s['examples']) && s['examples'].length > 0) {
     return s['examples'][0];
@@ -148,7 +153,8 @@ export function generateTemplateFromSchema(schema: unknown): unknown {
       return [];
     case 'string': {
       if (Array.isArray(s['enum']) && s['enum'].length > 0) return s['enum'][0];
-      if (s['format'] === 'date') return new Date().toISOString().substring(0, 10);
+      if (s['format'] === 'date')
+        return new Date().toISOString().substring(0, 10);
       if (
         s['format'] ===
         '^[0-9]{4}-(0[1-9]|1[0-2])-[0-9]{2}T([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9](\\.[0-9]{1,3})?)?$'

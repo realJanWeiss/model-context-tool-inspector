@@ -29,14 +29,18 @@ async function updateBadge(tabId: number): Promise<void> {
   if (!tab || tab.id !== tabId) return;
   chrome.action.setBadgeText({ text: '', tabId });
   chrome.action.setBadgeBackgroundColor({ color: '#2563eb' });
-  chrome.tabs.sendMessage(tabId, { action: 'LIST_TOOLS' }).catch(({ message }: Error) => {
-    chrome.runtime.sendMessage({ message });
-  });
+  chrome.tabs
+    .sendMessage(tabId, { action: 'LIST_TOOLS' })
+    .catch(({ message }: Error) => {
+      chrome.runtime.sendMessage({ message });
+    });
 }
 
-chrome.runtime.onMessage.addListener(({ tools }: { tools?: unknown[] }, { tab }) => {
-  const text = tools?.length ? `${tools.length}` : '';
-  if (tab?.id !== undefined) {
-    chrome.action.setBadgeText({ text, tabId: tab.id });
-  }
-});
+chrome.runtime.onMessage.addListener(
+  ({ tools }: { tools?: unknown[] }, { tab }) => {
+    const text = tools?.length ? `${tools.length}` : '';
+    if (tab?.id !== undefined) {
+      chrome.action.setBadgeText({ text, tabId: tab.id });
+    }
+  },
+);

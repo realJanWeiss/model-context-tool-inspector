@@ -15,7 +15,10 @@ void initLMStudio();
 
 (async () => {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
     if (tab?.id !== undefined) {
       await chrome.tabs.sendMessage(tab.id, { action: 'LIST_TOOLS' });
     }

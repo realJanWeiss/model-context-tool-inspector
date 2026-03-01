@@ -2,7 +2,7 @@
  * AI prompt section: textarea, send/reset/trace buttons, and log output.
  */
 
-import { Accessor } from 'solid-js';
+import type { Accessor } from 'solid-js';
 import { FormField } from './FormField.js';
 import { ResultPane } from './ResultPane.js';
 
@@ -32,9 +32,19 @@ export function PromptSection(props: {
       </FormField>
 
       <div class="form-group">
-        <button disabled={!props.lmReady()} onClick={props.onSubmit}>Send</button>
-        <button class="secondary" disabled={!props.lmReady()} onClick={props.onReset}>Reset</button>
-        <button class="secondary" onClick={props.onCopyTrace}>Copy trace</button>
+        <button disabled={!props.lmReady()} type="submit" onClick={props.onSubmit}>
+          Send
+        </button>
+        <button
+          class="secondary"
+          disabled={!props.lmReady()}
+          onClick={props.onReset}
+        >
+          Reset
+        </button>
+        <button class="secondary" onClick={props.onCopyTrace}>
+          Copy trace
+        </button>
       </div>
 
       <ResultPane id="promptResults" content={props.promptLog} />

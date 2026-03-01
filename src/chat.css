@@ -36,7 +36,9 @@
   background: var(--surface);
   outline: none;
   overflow-y: hidden;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 #prompt-input:focus {

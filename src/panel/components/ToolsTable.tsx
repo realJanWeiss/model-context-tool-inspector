@@ -2,7 +2,7 @@
  * Tools table with copy buttons.
  */
 
-import { Accessor, For, Show } from 'solid-js';
+import { type Accessor, For, Show } from 'solid-js';
 import type { McpTool } from '../../types.js';
 
 function cellContent(tool: McpTool, key: keyof McpTool): string {
@@ -50,7 +50,10 @@ export function ToolsTable(props: {
               fallback={
                 <tr>
                   <td colspan="100%">
-                    <i>No tools registered yet{props.toolsUrl() ? ` in ${props.toolsUrl()}` : ''}</i>
+                    <i>
+                      No tools registered yet
+                      {props.toolsUrl() ? ` in ${props.toolsUrl()}` : ''}
+                    </i>
                   </td>
                 </tr>
               }
@@ -59,7 +62,11 @@ export function ToolsTable(props: {
                 {(tool) => (
                   <tr>
                     <For each={toolKeys(props.tools())}>
-                      {(key) => <td><pre>{cellContent(tool, key)}</pre></td>}
+                      {(key) => (
+                        <td>
+                          <pre>{cellContent(tool, key)}</pre>
+                        </td>
+                      )}
                     </For>
                   </tr>
                 )}
@@ -69,7 +76,10 @@ export function ToolsTable(props: {
         </table>
         <Show when={props.tools().length > 0}>
           <div id="copyToClipboard">
-            <span id="copyAsScriptToolConfig" onClick={props.onCopyAsScriptToolConfig}>
+            <span
+              id="copyAsScriptToolConfig"
+              onClick={props.onCopyAsScriptToolConfig}
+            >
               📝 Copy as ScriptToolConfig
             </span>
             <span id="copyAsJSON" onClick={props.onCopyAsJSON}>

@@ -2,7 +2,7 @@
  * Manual tool execution: tool selector, input args, execute button, result output.
  */
 
-import { Accessor, For } from 'solid-js';
+import { type Accessor, For } from 'solid-js';
 import type { McpTool } from '../../types.js';
 import { FormField } from './FormField.js';
 import { ResultPane } from './ResultPane.js';
@@ -47,6 +47,7 @@ export function ExecuteSection(props: {
         <button
           id="executeBtn"
           disabled={noTools() || props.executing()}
+          type="submit"
           onClick={props.onExecute}
         >
           Execute Tool

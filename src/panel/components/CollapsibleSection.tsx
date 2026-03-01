@@ -2,9 +2,12 @@
  * Reusable collapsible section with a clickable header.
  */
 
-import { createSignal, JSX } from 'solid-js';
+import { createSignal, type JSX } from 'solid-js';
 
-export function CollapsibleSection(props: { title: string; children: JSX.Element }) {
+export function CollapsibleSection(props: {
+  title: string;
+  children: JSX.Element;
+}) {
   const [collapsed, setCollapsed] = createSignal(false);
 
   return (

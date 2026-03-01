@@ -20,7 +20,11 @@ const nav = navigator as NavWithMcp;
 
 chrome.runtime.onMessage.addListener(
   (
-    { action, name, inputArgs }: { action: string; name?: string; inputArgs?: string },
+    {
+      action,
+      name,
+      inputArgs,
+    }: { action: string; name?: string; inputArgs?: string },
     _sender: chrome.runtime.MessageSender,
     reply: (result?: unknown) => void,
   ) => {
@@ -43,13 +47,19 @@ chrome.runtime.onMessage.addListener(
         let loadPromise: Promise<void> | null = null;
 
         // Check if this tool is associated with a form target.
-        const formEl = document.querySelector<HTMLFormElement>(`form[toolname="${name}"]`);
+        const formEl = document.querySelector<HTMLFormElement>(
+          `form[toolname="${name}"]`,
+        );
         const formTarget = formEl?.target;
         if (formTarget) {
-          targetFrame = document.querySelector<HTMLIFrameElement>(`[name=${formTarget}]`);
+          targetFrame = document.querySelector<HTMLIFrameElement>(
+            `[name=${formTarget}]`,
+          );
           if (targetFrame) {
             loadPromise = new Promise((resolve) => {
-              targetFrame!.addEventListener('load', () => resolve(), { once: true });
+              targetFrame!.addEventListener('load', () => resolve(), {
+                once: true,
+              });
             });
           }
         }
@@ -58,11 +68,14 @@ chrome.runtime.onMessage.addListener(
         promise
           .then(async (result: string | null) => {
             if (result === null && targetFrame && loadPromise) {
-              console.debug(`[WebMCP] Waiting for form target ${String(targetFrame)} to load`);
+              console.debug(
+                `[WebMCP] Waiting for form target ${String(targetFrame)} to load`,
+              );
               await loadPromise;
               console.debug('[WebMCP] Get cross document script tool result');
-              const frameMcp = (targetFrame.contentWindow!.navigator as NavWithMcp)
-                .modelContextTesting;
+              const frameMcp = (
+                targetFrame.contentWindow!.navigator as NavWithMcp
+              ).modelContextTesting;
               result = await frameMcp!.getCrossDocumentScriptToolResult();
             }
             reply(result);
@@ -74,7 +87,9 @@ chrome.runtime.onMessage.addListener(
       if (action === 'GET_CROSS_DOCUMENT_SCRIPT_TOOL_RESULT') {
         console.debug('[WebMCP] Get cross document script tool result');
         const promise = mcp.getCrossDocumentScriptToolResult();
-        promise.then(reply).catch(({ message }: Error) => reply(JSON.stringify(message)));
+        promise
+          .then(reply)
+          .catch(({ message }: Error) => reply(JSON.stringify(message)));
         return true;
       }
     } catch (err) {

@@ -11,9 +11,9 @@ import {
   toOpenAITools,
 } from '../lmstudio.js';
 import type { ChatMessage, McpTool, ToolsPayload } from '../types.js';
-import type { Msg } from './types.js';
 import { ChatFooter } from './components/ChatFooter.js';
 import { MessageList } from './components/MessageList.js';
+import type { Msg } from './types.js';
 
 export function App() {
   const [tools, setTools] = createSignal<McpTool[]>([]);
@@ -23,12 +23,17 @@ export function App() {
 
   // ── Tool list updates from content script ────────────────────────────────
 
-  chrome.runtime.onMessage.addListener(async (payload: ToolsPayload, sender) => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (sender.tab && sender.tab.id !== tab?.id) return;
-    if (!payload.tools) return;
-    setTools(payload.tools);
-  });
+  chrome.runtime.onMessage.addListener(
+    async (payload: ToolsPayload, sender) => {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      if (sender.tab && sender.tab.id !== tab?.id) return;
+      if (!payload.tools) return;
+      setTools(payload.tools);
+    },
+  );
 
   // ── Message helpers ──────────────────────────────────────────────────────
 
@@ -45,7 +50,10 @@ export function App() {
   // ── Agent loop ───────────────────────────────────────────────────────────
 
   async function runAgentLoop(userMessage: string): Promise<void> {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
     const tabId = tab?.id;
     if (tabId === undefined) throw new Error('No active tab found.');
 
@@ -86,7 +94,12 @@ export function App() {
         if (!name) continue;
 
         const inputArgs = normalizeInputArgs(rawArgs);
-        const idx = appendMsg({ role: 'tool-call', name, args: inputArgs, result: null });
+        const idx = appendMsg({
+          role: 'tool-call',
+          name,
+          args: inputArgs,
+          result: null,
+        });
 
         try {
           const result = (await chrome.tabs.sendMessage(tabId, {
@@ -94,12 +107,30 @@ export function App() {
             name,
             inputArgs,
           })) as string | null;
-          updateMsg(idx, () => ({ role: 'tool-call', name, args: inputArgs, result: result ?? '(no result)' }));
-          history.push({ role: 'tool', tool_call_id: call.id, content: stringifyContent({ result }) });
+          updateMsg(idx, () => ({
+            role: 'tool-call',
+            name,
+            args: inputArgs,
+            result: result ?? '(no result)',
+          }));
+          history.push({
+            role: 'tool',
+            tool_call_id: call.id,
+            content: stringifyContent({ result }),
+          });
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
-          updateMsg(idx, () => ({ role: 'tool-call', name, args: inputArgs, result: `Error: ${msg}` }));
-          history.push({ role: 'tool', tool_call_id: call.id, content: stringifyContent({ error: msg }) });
+          updateMsg(idx, () => ({
+            role: 'tool-call',
+            name,
+            args: inputArgs,
+            result: `Error: ${msg}`,
+          }));
+          history.push({
+            role: 'tool',
+            tool_call_id: call.id,
+            content: stringifyContent({ error: msg }),
+          });
         }
       }
     }
@@ -118,14 +149,19 @@ export function App() {
     try {
       await runAgentLoop(text);
     } catch (err) {
-      appendMsg({ role: 'ai', text: `Error: ${err instanceof Error ? err.message : String(err)}` });
+      appendMsg({
+        role: 'ai',
+        text: `Error: ${err instanceof Error ? err.message : String(err)}`,
+      });
     } finally {
       setLoading(false);
     }
   }
 
   function onChipClick(tool: McpTool): void {
-    setInputValue(tool.description ? `Use ${tool.name}: ${tool.description}` : tool.name);
+    setInputValue(
+      tool.description ? `Use ${tool.name}: ${tool.description}` : tool.name,
+    );
   }
 
   // ── Render ───────────────────────────────────────────────────────────────

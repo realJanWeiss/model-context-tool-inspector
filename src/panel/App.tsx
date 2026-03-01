@@ -44,25 +44,27 @@ export function App(props: { tabId: number }) {
 
   // ── Tool list updates ─────────────────────────────────────────────────────
 
-  chrome.runtime.onMessage.addListener(async (payload: ToolsPayload, sender) => {
-    if (sender.tab && sender.tab.id !== tabId) return;
+  chrome.runtime.onMessage.addListener(
+    async (payload: ToolsPayload, sender) => {
+      if (sender.tab && sender.tab.id !== tabId) return;
 
-    const { message, tools: newTools, url } = payload;
-    setStatusMsg(message ?? '');
-    setToolsUrl(url ?? '');
+      const { message, tools: newTools, url } = payload;
+      setStatusMsg(message ?? '');
+      setToolsUrl(url ?? '');
 
-    const incoming = newTools ?? [];
-    const oldJson = JSON.stringify(tools());
-    setTools(incoming);
-    if (JSON.stringify(incoming) !== oldJson) {
-      void suggestUserPrompt();
-    }
+      const incoming = newTools ?? [];
+      const oldJson = JSON.stringify(tools());
+      setTools(incoming);
+      if (JSON.stringify(incoming) !== oldJson) {
+        void suggestUserPrompt();
+      }
 
-    if (incoming.length > 0 && selectedToolName() === '') {
-      setSelectedToolName(incoming[0]?.name ?? '');
-      updateDefaultInputArgs(incoming[0]);
-    }
-  });
+      if (incoming.length > 0 && selectedToolName() === '') {
+        setSelectedToolName(incoming[0]?.name ?? '');
+        updateDefaultInputArgs(incoming[0]);
+      }
+    },
+  );
 
   // ── Copy helpers ──────────────────────────────────────────────────────────
 
@@ -80,7 +82,9 @@ export function App(props: { tabId: number }) {
     const list = tools().map((t) => ({
       name: t.name,
       description: t.description,
-      inputSchema: t.inputSchema ? (JSON.parse(t.inputSchema) as object) : { type: 'object', properties: {} },
+      inputSchema: t.inputSchema
+        ? (JSON.parse(t.inputSchema) as object)
+        : { type: 'object', properties: {} },
     }));
     await navigator.clipboard.writeText(JSON.stringify(list, null, '  '));
   }
@@ -104,7 +108,10 @@ export function App(props: { tabId: number }) {
       { role: 'user', content: message },
     ];
     const openAITools = toOpenAITools(tools());
-    setTrace((prev) => [...prev, { userPrompt: { message, tools: openAITools } }]);
+    setTrace((prev) => [
+      ...prev,
+      { userPrompt: { message, tools: openAITools } },
+    ]);
 
     let finalResponseGiven = false;
     while (!finalResponseGiven) {
@@ -112,12 +119,18 @@ export function App(props: { tabId: number }) {
       setTrace((prev) => [...prev, { response }]);
       const assistantMessage = response.choices[0]?.message;
       if (!assistantMessage) {
-        logPrompt(`⚠️ AI response is missing a message: ${JSON.stringify(response)}`);
+        logPrompt(
+          `⚠️ AI response is missing a message: ${JSON.stringify(response)}`,
+        );
         return;
       }
 
       const functionCalls = assistantMessage.tool_calls ?? [];
-      messages.push({ role: 'assistant', content: assistantMessage.content ?? '', tool_calls: functionCalls });
+      messages.push({
+        role: 'assistant',
+        content: assistantMessage.content ?? '',
+        tool_calls: functionCalls,
+      });
 
       if (functionCalls.length === 0) {
         if (!assistantMessage.content) {
@@ -130,17 +143,32 @@ export function App(props: { tabId: number }) {
         for (const fc of functionCalls) {
           const name = fc.function.name;
           const rawArgs = fc.function.arguments ?? '{}';
-          if (!name) { logPrompt(`⚠️ Malformed tool call from AI: ${JSON.stringify(fc)}`); continue; }
+          if (!name) {
+            logPrompt(`⚠️ Malformed tool call from AI: ${JSON.stringify(fc)}`);
+            continue;
+          }
           const args = normalizeInputArgs(rawArgs);
           logPrompt(`AI calling tool "${name}" with ${args}`);
           try {
-            const result = await chrome.tabs.sendMessage(tabId, { action: 'EXECUTE_TOOL', name, inputArgs: args });
+            const result = await chrome.tabs.sendMessage(tabId, {
+              action: 'EXECUTE_TOOL',
+              name,
+              inputArgs: args,
+            });
             logPrompt(`Tool "${name}" result: ${String(result)}`);
-            messages.push({ role: 'tool', tool_call_id: fc.id, content: stringifyContent({ result }) });
+            messages.push({
+              role: 'tool',
+              tool_call_id: fc.id,
+              content: stringifyContent({ result }),
+            });
           } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             logPrompt(`⚠️ Error executing tool "${name}": ${msg}`);
-            messages.push({ role: 'tool', tool_call_id: fc.id, content: stringifyContent({ error: msg }) });
+            messages.push({
+              role: 'tool',
+              tool_call_id: fc.id,
+              content: stringifyContent({ error: msg }),
+            });
           }
         }
       }
@@ -183,7 +211,8 @@ export function App(props: { tabId: number }) {
       },
       { role: 'user', content: `Available tools:\n${JSON.stringify(tools())}` },
     ]);
-    if (id !== userPromptPendingId() || userPrompt() !== lastSuggestedPrompt()) return;
+    if (id !== userPromptPendingId() || userPrompt() !== lastSuggestedPrompt())
+      return;
     const suggestion = response.choices[0]?.message.content?.trim();
     if (!suggestion) return;
     setLastSuggestedPrompt(suggestion);
@@ -198,7 +227,9 @@ export function App(props: { tabId: number }) {
 
   function updateDefaultInputArgs(tool: McpTool | undefined): void {
     if (!tool) return;
-    const schema = tool.inputSchema ? (JSON.parse(tool.inputSchema) as object) : {};
+    const schema = tool.inputSchema
+      ? (JSON.parse(tool.inputSchema) as object)
+      : {};
     setInputArgs(JSON.stringify(generateTemplateFromSchema(schema), null, ' '));
   }
 
@@ -220,7 +251,9 @@ export function App(props: { tabId: number }) {
         setToolResult(String(result));
       } else {
         await waitForPageLoad(tabId);
-        const crossResult = await chrome.tabs.sendMessage(tabId, { action: 'GET_CROSS_DOCUMENT_SCRIPT_TOOL_RESULT' });
+        const crossResult = await chrome.tabs.sendMessage(tabId, {
+          action: 'GET_CROSS_DOCUMENT_SCRIPT_TOOL_RESULT',
+        });
         setToolResult(String(crossResult));
       }
     } catch (e) {
@@ -271,7 +304,10 @@ export function App(props: { tabId: number }) {
 
 function waitForPageLoad(id: number): Promise<void> {
   return new Promise((resolve) => {
-    const listener = (updatedTabId: number, changeInfo: { status?: string }) => {
+    const listener = (
+      updatedTabId: number,
+      changeInfo: { status?: string },
+    ) => {
       if (updatedTabId === id && changeInfo.status === 'complete') {
         chrome.tabs.onUpdated.removeListener(listener);
         resolve();

@@ -2,7 +2,7 @@
  * A labelled section inside an expanded tool call card.
  */
 
-import { DataView } from './DataView.js';
+import { DataView } from './DataView';
 import './DetailSection.css';
 
 export function DetailSection(props: { label: string; data: unknown }) {

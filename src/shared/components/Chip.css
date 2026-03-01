@@ -1,0 +1,31 @@
+.chip {
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px solid #d1d5db;
+  background: var(--surface);
+  color: #374151;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+  font-weight: normal;
+}
+
+.chip:hover {
+  background: var(--border);
+  border-color: var(--text-muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  .chip {
+    border-color: #3a3a3a;
+    color: #d1d5db;
+  }
+
+  .chip:hover {
+    background: #2a2a2a;
+    border-color: #555;
+  }
+}
