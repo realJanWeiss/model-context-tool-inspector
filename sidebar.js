@@ -236,11 +236,7 @@ async function promptAI() {
         const inputArgs = JSON.stringify(args);
         logPrompt(`AI calling tool "${name}" with ${inputArgs}`);
         try {
-          const result = await chrome.tabs.sendMessage(tab.id, {
-            action: 'EXECUTE_TOOL',
-            name,
-            inputArgs,
-          });
+          const result = await executeTool(tab.id, name, inputArgs);
           toolResponses.push({ functionResponse: { name, response: { result } } });
           logPrompt(`Tool "${name}" result: ${result}`);
         } catch (e) {
@@ -289,18 +285,25 @@ executeBtn.onclick = async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const name = toolNames.selectedOptions[0].value;
   const inputArgs = inputArgsText.value;
-  const result = await chrome.tabs.sendMessage(tab.id, { action: 'EXECUTE_TOOL', name, inputArgs });
-  if (result !== null) {
-    toolResults.textContent = result;
-    return;
+  toolResults.textContent = await executeTool(tab.id, name, inputArgs).catch(
+    (error) => `⚠️ Error: "${error}"`,
+  );
+};
+
+async function executeTool(tabId, name, inputArgs) {
+  try {
+    const result = await chrome.tabs.sendMessage(tabId, { action: 'EXECUTE_TOOL', name,inputArgs });
+    if (result !== null) return result;
+  } catch (error) {
+    if (!error.message.includes('message channel is closed')) throw error;
   }
   // A navigation was triggered. The result will be on the next document.
   // TODO: Handle case where a new tab is opened.
-  await waitForPageLoad(tab.id);
-  toolResults.textContent = await chrome.tabs.sendMessage(tab.id, {
+  await waitForPageLoad(tabId);
+  return await chrome.tabs.sendMessage(tabId, {
     action: 'GET_CROSS_DOCUMENT_SCRIPT_TOOL_RESULT',
   });
-};
+}
 
 toolNames.onchange = updateDefaultValueForInputArgs;
 
