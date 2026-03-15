@@ -1,0 +1,38 @@
+.disclosure__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.disclosure__chevron {
+  display: inline-block;
+  transform: rotate(0deg);
+  transition: transform 0.12s ease-in-out;
+  line-height: 1;
+}
+
+.disclosure--expanded .disclosure__chevron {
+  transform: rotate(90deg);
+}
+
+.disclosure__summary {
+  flex: 1 1 auto;
+}
+
+.disclosure__content {
+  padding: 0.5rem 0.75rem 0 1.75rem;
+}
+
+.disclosure--disabled .disclosure__header {
+  cursor: default;
+  opacity: 0.6;
+}

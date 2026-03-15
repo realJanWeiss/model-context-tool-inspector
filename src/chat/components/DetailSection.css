@@ -1,17 +1,3 @@
-.tool-call-details {
-  display: none;
-  margin-top: 6px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-  font-family: monospace;
-  font-size: 11.5px;
-}
-
-.expanded .tool-call-details {
-  display: block;
-}
-
 .tool-detail-section {
   padding: 8px 10px;
 }
