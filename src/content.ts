@@ -38,6 +38,10 @@ chrome.runtime.onMessage.addListener(
 
       if (action === 'LIST_TOOLS') {
         listTools();
+        if ('ontoolchange' in navigator.modelContextTesting.__proto__) {
+          navigator.modelContextTesting.addEventListener('toolchange', listTools);
+          return;
+        }
         mcp.registerToolsChangedCallback(listTools);
       }
 
