@@ -87,16 +87,26 @@ export function getSystemInstruction(): string {
 }
 
 export function toOpenAITools(tools: McpTool[]): OpenAITool[] {
-  return tools.map((t) => ({
-    type: 'function',
-    function: {
-      name: t.name,
-      description: t.description,
-      parameters: t.inputSchema
-        ? (JSON.parse(t.inputSchema) as object)
-        : { type: 'object', properties: {} },
-    },
-  }));
+  return tools.map((t) => {
+    let parsedArguments: unknown
+    try {
+      parsedArguments = t.inputSchema ? JSON.parse(t.inputSchema) : undefined;
+    } catch (e) {
+      console.warn(`Failed to parse input schema for tool ${t.name}:`, e);
+    }
+    let parameters: object | undefined;
+    if (parsedArguments && typeof parsedArguments === 'object' && Object.keys(parsedArguments).length > 0) {
+      parameters = parsedArguments;
+    }
+    return {
+      type: 'function',
+      function: {
+        name: t.name,
+        description: t.description,
+        parameters: parameters
+      }
+    }
+  });
 }
 
 export function normalizeInputArgs(raw: string | object | undefined): string {

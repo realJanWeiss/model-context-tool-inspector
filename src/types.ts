@@ -29,7 +29,7 @@ export interface OpenAITool {
   function: {
     name: string;
     description: string;
-    parameters: object;
+    parameters?: object;
   };
 }
 
